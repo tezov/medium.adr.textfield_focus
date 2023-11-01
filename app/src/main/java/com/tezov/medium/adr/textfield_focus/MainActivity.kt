@@ -58,42 +58,9 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    MyView()
+                    FocusExample()
                 }
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun MyView(){
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    TextField(modifier = Modifier
-        .padding(horizontal = 14.dp, vertical = 8.dp)
-        .fillMaxWidth(),
-        textStyle = TextStyle(
-            fontSize = 24.sp
-        ),
-        value = "hello",
-        onValueChange = {
-
-        })
-
-    LaunchedEffect(Unit) {
-        keyboardController?.let {
-            println("here")
-            delay(500)
-            println("show")
-            keyboardController.show()
-            delay(5000)
-            println("hide")
-            keyboardController.hide()
-            delay(5000)
-            println("show")
-            keyboardController.show()
-
         }
     }
 }
