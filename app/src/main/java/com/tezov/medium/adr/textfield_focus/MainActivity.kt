@@ -31,12 +31,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -45,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tezov.medium.adr.textfield_focus.ui.theme.Textfield_focusTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,9 +58,42 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    FocusExample()
+                    MyView()
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun MyView(){
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    TextField(modifier = Modifier
+        .padding(horizontal = 14.dp, vertical = 8.dp)
+        .fillMaxWidth(),
+        textStyle = TextStyle(
+            fontSize = 24.sp
+        ),
+        value = "hello",
+        onValueChange = {
+
+        })
+
+    LaunchedEffect(Unit) {
+        keyboardController?.let {
+            println("here")
+            delay(500)
+            println("show")
+            keyboardController.show()
+            delay(5000)
+            println("hide")
+            keyboardController.hide()
+            delay(5000)
+            println("show")
+            keyboardController.show()
+
         }
     }
 }
@@ -71,7 +107,7 @@ fun FocusExample() {
     Column(
         modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top
     ) {
-        val focusDispatcher = remember { FocusDispatcher() }.also { it.compose() }
+        val focusDispatcher = rememberFocusDispatcher()
 
         val login = remember { mutableStateOf("") }
         val loginId = remember { focusDispatcher.createId() }
@@ -114,10 +150,7 @@ fun FocusExample() {
             TextField(modifier = Modifier
                 .padding(horizontal = 14.dp, vertical = 8.dp)
                 .fillMaxWidth()
-                .focusRequester(loginId.value)
-                .onFocusChanged {
-                    if (it.isFocused) loginId.onFocus()
-                },
+                .focusId(loginId),
                 textStyle = TextStyle(
                     fontSize = 24.sp
                 ),
@@ -150,10 +183,7 @@ fun FocusExample() {
                     TextField(
                         modifier = Modifier
                             .weight(1.0f)
-                            .focusRequester(passwordId.value)
-                            .onFocusChanged {
-                                if (it.isFocused) passwordId.onFocus()
-                            },
+                            .focusId(loginId),
                         textStyle = TextStyle(
                             fontSize = 24.sp
                         ),
@@ -201,7 +231,7 @@ fun FocusExample() {
             ) {
                 Button(
                      colors = ButtonDefaults.buttonColors(
-                        containerColor = if(passwordId.hasFocus()) Color.Blue else Color.LightGray
+                        containerColor = if(passwordId.hasFocus) Color.Blue else Color.LightGray
                     ),
                     onClick = {
                         onPasswordChange(newValue = password.value + value)

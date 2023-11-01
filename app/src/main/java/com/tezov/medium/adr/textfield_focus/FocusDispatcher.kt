@@ -2,8 +2,11 @@ package com.tezov.medium.adr.textfield_focus
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -12,7 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
-class FocusDispatcher {
+class FocusDispatcher internal constructor(){
 
     inner class FocusId internal constructor(internal val autoShowKeyboard: Boolean) {
 
@@ -22,7 +25,7 @@ class FocusDispatcher {
             onFocus(this)
         }
 
-        fun hasFocus() = hasFocus(this)
+        val hasFocus get () = hasFocus(this)
 
         fun requestFocus() = requestFocus(this)
 
@@ -39,7 +42,7 @@ class FocusDispatcher {
     fun destroyId(id: FocusId) = ids.remove(id)
 
     @Composable
-    fun compose() {
+    internal fun compose() {
         coroutine = rememberCoroutineScope()
         keyboardController = LocalSoftwareKeyboardController.current
         focusManager = LocalFocusManager.current
@@ -85,3 +88,17 @@ class FocusDispatcher {
     fun hasFocus(id: FocusId) = focusOwner.value == id
 
 }
+
+@Composable
+fun rememberFocusDispatcher():FocusDispatcher {
+    return remember {
+        FocusDispatcher()
+    }.also { it.compose() }
+}
+
+fun Modifier.focusId(
+    id: FocusDispatcher.FocusId,
+) = focusRequester(id.value)
+    .onFocusChanged {
+        if (it.isFocused) id.onFocus()
+    }
